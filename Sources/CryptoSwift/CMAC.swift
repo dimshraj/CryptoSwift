@@ -103,4 +103,19 @@ public class CMAC: Authenticator {
     shifted[last] = bytes[last] << 1
     return shifted
   }
+  public func getK(_ bytes: Array<UInt8>) throws -> Array<UInt8> {
+        
+        let aes = try AES(key: Array(key), blockMode: CBC(iv: CMAC.Zero), padding: .noPadding)
+        
+        let l = try aes.encrypt(CMAC.Zero)
+        var subKey1 = self.leftShiftOneBit(l)
+        if (l[0] & 0x80) != 0 {
+            subKey1 = xor(CMAC.Rb, subKey1)
+        }
+        var subKey2 = self.leftShiftOneBit(subKey1)
+        if (subKey1[0] & 0x80) != 0 {
+            subKey2 = xor(CMAC.Rb, subKey2)
+        }
+        return try subKey2
+    }
 }
